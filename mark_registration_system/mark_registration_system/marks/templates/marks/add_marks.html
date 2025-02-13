@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Marks</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Shared CSS for Light/Dark Mode -->
+    <style>
+        /* Light mode (default) */
+        :root {
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --navbar-bg: #007bff;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
+            --background-color: rgb(64, 85, 83);
+            --text-color: #f5f7fa;
+            --navbar-bg: #343a40;
+            --card-bg: rgb(64, 85, 83);
+            --card-shadow: 0 4px 6px rgba(6, 6, 6, 0.3);
+        }
+
+        /* Apply theme colors */
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg) !important;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            box-shadow: var(--card-shadow);
+            border-radius: 15px;
+        }
+
+        /* Additional styles for the form */
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .btn {
+            font-weight: 500;
+            border-radius: 10px;
+        }
+
+        .tooltip-inner {
+            max-width: 250px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2 class="text-center mb-4">Add Marks</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="student_id" class="form-label">Student ID:</label>
+                        <input type="text" name="student_id" class="form-control" placeholder="Enter Student ID" required data-bs-toggle="tooltip" title="Unique identifier for the student.">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="student_name" class="form-label">Student Name:</label>
+                        <input type="text" name="student_name" class="form-control" placeholder="Enter Student Name" required data-bs-toggle="tooltip" title="Full name of the student.">
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="gender" class="form-label">Gender:</label>
+                        <select name="gender" class="form-select" required data-bs-toggle="tooltip" title="Select the student's gender.">
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="module_code" class="form-label">Module Code:</label>
+                        <input type="text" name="module_code" class="form-control" placeholder="Enter Module Code" required data-bs-toggle="tooltip" title="Code of the module the marks are for.">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="module_name" class="form-label">Module Name:</label>
+                    <input type="text" name="module_name" class="form-control" placeholder="Enter Module Name" required data-bs-toggle="tooltip" title="Name of the module.">
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="coursework1" class="form-label">Coursework 1 Marks:</label>
+                        <input type="number" name="coursework1" class="form-control" placeholder="Enter Marks" required data-bs-toggle="tooltip" title="Marks for the first coursework.">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="coursework2" class="form-label">Coursework 2 Marks:</label>
+                        <input type="number" name="coursework2" class="form-control" placeholder="Enter Marks" required data-bs-toggle="tooltip" title="Marks for the second coursework.">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="coursework3" class="form-label">Coursework 3 Marks:</label>
+                        <input type="number" name="coursework3" class="form-control" placeholder="Enter Marks" required data-bs-toggle="tooltip" title="Marks for the third coursework.">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="entry_date" class="form-label">Date of Entry:</label>
+                    <input type="date" name="entry_date" class="form-control" required data-bs-toggle="tooltip" title="Date when the marks are being recorded.">
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success">Add Marks</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Apply Theme Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentTheme = localStorage.getItem('theme');
+
+            // Set the theme based on localStorage
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                console.log('Dark mode applied');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                console.log('Light mode applied');
+            }
+        });
+    </script>
+    <!-- Tooltip Script -->
+    <script>
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    </script>
+</body>
+</html>

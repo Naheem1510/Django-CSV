@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualise Marks</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Include D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Include Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Shared CSS for Light/Dark Mode -->
+    <style>
+        /* Light mode (default) */
+        :root {
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --navbar-bg: #007bff;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
+            --background-color: #1a1a1a;
+            --text-color: #f5f7fa;
+            --navbar-bg: #343a40;
+            --card-bg: #2d2d2d;
+            --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Apply theme colors */
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg) !important;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            box-shadow: var(--card-shadow);
+            border-radius: 15px;
+        }
+
+        .card-header {
+            background-color: var(--navbar-bg) !important;
+            color: var(--text-color);
+        }
+
+        .legend {
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        .legend rect {
+            stroke: #333;
+            stroke-width: 1px;
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .explanation {
+            font-size: 20px;
+            font-family: 'Arial', sans-serif;
+            margin-left: 200px;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .explanation div {
+            opacity: 0;
+            transition: opacity 0.5s;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .explanation div span {
+            color: #007BFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Marks Visualisation Dashboard</h1>
+
+        <!-- Summary Cards -->
+        <div class="row text-center mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h4>Total Students</h4>
+                        <p class="fs-2">{{ summary.total_students }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h4>Highest Mark</h4>
+                        <p class="fs-2">{{ summary.highest_mark }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <h4>Lowest Mark</h4>
+                        <p class="fs-2">{{ summary.lowest_mark }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h4>Average Mark</h4>
+                        <p class="fs-2">{{ summary.average_marks }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie Chart and Explanation -->
+        <div class="d-flex align-items-center">
+            <div id="pieChart"></div>
+            <div id="explanation" class="explanation"></div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="mb-4">
+            <h3 class="text-center">Marks Distribution by Coursework</h3>
+            <div id="barChart"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Apply Theme Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentTheme = localStorage.getItem('theme');
+
+            // Set the theme based on localStorage
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                console.log('Dark mode applied');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                console.log('Light mode applied');
+            }
+        });
+    </script>
+    <!-- Visualisation Script -->
+    <script>
+        // Pie Chart Data
+        const pieChartData = JSON.parse('{{ pie_chart_data|escapejs }}');
+        const gradeRanges = pieChartData.grade_ranges;
+        const counts = pieChartData.counts;
+
+        // Set up SVG dimensions for the pie chart
+        const width = 300;
+        const height = 300;
+        const radius = Math.min(width, height) / 2;
+
+        // Create SVG container for the pie chart
+        const svg = d3.select("#pieChart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width / 2},${height / 2})`);
+
+        // Create a pie layout
+        const pie = d3.pie()
+            .value(d => d)
+            .sort(null);
+
+        // Create an arc generator
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        // Create a color scale
+        const color = d3.scaleOrdinal()
+            .domain(gradeRanges)
+            .range(d3.schemeCategory10);
+
+        // Tooltip
+        const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip");
+
+        // Function to animate slices one by one
+        function animateSlices() {
+            // Bind data to arcs
+            const arcs = svg.selectAll(".arc")
+                .data(pie(counts))
+                .enter()
+                .append("g")
+                .attr("class", "arc");
+
+            // Add paths for each slice
+            arcs.append("path")
+                .attr("d", arc)
+                .attr("fill", (d, i) => color(i))
+                .style("opacity", 0) // Start with invisible slices
+                .transition() // Animate each slice
+                .delay((d, i) => i * 300) // Delay each slice's animation
+                .duration(800) // Increase duration for smoother animation
+                .ease(d3.easeCubicInOut) // Use a smoother easing function
+                .style("opacity", 1) // Fade in each slice
+                .on("end", () => {
+                    // Add tooltip interaction after animation
+                    d3.select(this)
+                        .on("mouseover", (event, d) => {
+                            tooltip.transition()
+                                .duration(200)
+                                .style("opacity", 0.9);
+                            tooltip.html(`<strong>${d.data}</strong><br>Count: ${d.value}<br>Percentage: ${((d.value / d3.sum(counts)) * 100).toFixed(2)}%`)
+                                .style("left", `${event.pageX}px`)
+                                .style("top", `${event.pageY - 28}px`);
+                        })
+                        .on("mouseout", () => {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+                });
+
+            // Add labels to slices
+            arcs.append("text")
+                .attr("transform", d => `translate(${arc.centroid(d)})`)
+                .attr("text-anchor", "middle")
+                .text(d => d.data)
+                .style("opacity", 0) // Start with invisible labels
+                .transition() // Animate labels
+                .delay((d, i) => i * 300 + 400) // Delay labels slightly after slices
+                .duration(800) // Increase duration for smoother animation
+                .ease(d3.easeCubicInOut) // Use a smoother easing function
+                .style("opacity", 1); // Fade in labels
+        }
+
+        // Add a legend
+        const legend = svg.selectAll(".legend")
+            .data(gradeRanges)
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr("transform", (d, i) => `translate(${radius + 20},${i * 20 - radius})`);
+
+        legend.append("rect")
+            .attr("width", 18)
+            .attr("height", 18)
+            .attr("fill", (d, i) => color(i));
+
+        legend.append("text")
+            .attr("x", 24)
+            .attr("y", 9)
+            .attr("dy", "0.35em")
+            .text(d => d);
+
+        // Add explanation text beside the pie chart
+        const explanation = d3.select("#explanation")
+            .selectAll("div")
+            .data(gradeRanges)
+            .enter()
+            .append("div")
+            .html((d, i) => `<span>${d}</span>: ${counts[i]} students (${((counts[i] / d3.sum(counts)) * 100).toFixed(2)}%)`)
+            .style("opacity", 0) // Start with invisible text
+            .transition() // Animate text
+            .delay((d, i) => i * 300 + 400) // Delay text animation
+            .duration(800) // Increase duration for smoother animation
+            .ease(d3.easeCubicInOut) // Use a smoother easing function
+            .style("opacity", 1); // Fade in text
+
+        // Start the pie chart animation
+        animateSlices();
+
+        // Bar Chart Data
+        const barChartData = JSON.parse('{{ bar_chart_data|escapejs }}');
+        const barChartLayout = {
+            title: 'Marks Distribution',
+            xaxis: { title: 'Students' },
+            yaxis: { title: 'Marks' },
+            barmode: 'group'
+        };
+
+        // Create the bar chart using Plotly.js
+        Plotly.newPlot('barChart', [
+            { x: barChartData.labels, y: barChartData.coursework1, type: 'bar', name: 'Coursework 1' },
+            { x: barChartData.labels, y: barChartData.coursework2, type: 'bar', name: 'Coursework 2' },
+            { x: barChartData.labels, y: barChartData.coursework3, type: 'bar', name: 'Coursework 3' },
+        ], barChartLayout);
+    </script>
+</body>
+</html>

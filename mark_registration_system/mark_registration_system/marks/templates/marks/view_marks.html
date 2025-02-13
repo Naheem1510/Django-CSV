@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Marks</title>
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Shared CSS for Light/Dark Mode -->
+    <style>
+        /* Light mode (default) */
+        :root {
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --navbar-bg: #007bff;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
+            --background-color: rgb(77, 133, 144);
+            --text-color: #f5f7fa;
+            --navbar-bg: #343a40;
+            --card-bg: rgb(77, 133, 144);
+            --card-shadow: 0 4px 6px rgba(6, 6, 6, 0.3);
+        }
+
+        /* Apply theme colors */
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg) !important;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            box-shadow: var(--card-shadow);
+            border-radius: 15px;
+        }
+
+        /* Additional styles for the table */
+        .container {
+            margin-top: 50px;
+        }
+
+        h2 {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .table {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 0, 0, 0.05); /* Light mode stripe color */
+        }
+
+        [data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.05); /* Dark mode stripe color */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">View Marks</h2>
+        <div class="table-responsive mt-4">
+            <table id="marksTable" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Module Code</th>
+                        <th>Module Name</th>
+                        <th>Marks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Apply Theme Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentTheme = localStorage.getItem('theme');
+
+            // Set the theme based on localStorage
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                console.log('Dark mode applied');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                console.log('Light mode applied');
+            }
+        });
+    </script>
+    <!-- DataTables Initialization Script -->
+    <script>
+        $(document).ready(function () {
+            $('#marksTable').DataTable({
+                ajax: {
+                    url: '/fetch_marks_data/',
+                    type: 'GET',
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { title: "Student ID" },
+                    { title: "Student Name" },
+                    { title: "Module Code" },
+                    { title: "Module Name" },
+                    { title: "Marks" }  <!-- Displays coursework marks -->
+                ]
+            });
+        });
+    </script>
+</body>
+</html>
